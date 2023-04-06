@@ -1,11 +1,10 @@
 import React, {useState, useEffect} from "react";
 import { useDispatch, useSelector } from 'react-redux';
-import { Link, useHistory } from "react-router-dom";
-import { getGenres, getPlatforms, postVideogame } from '../actions/index'
+import { Link } from "react-router-dom";
+import { getGenres, getPlatforms, postVideogame } from '../../actions/index'
 
 export default function AddVideogame(){
     const dispatch = useDispatch()
-    const history = useHistory()
     const allGenres = useSelector((state) => state.genres)
     const allPlatforms = useSelector((state) => state.platforms)
     
@@ -63,7 +62,7 @@ export default function AddVideogame(){
             platforms: []
         })
 
-        history.push('/home')
+    
     }
 
     function handleDelete(event) {

@@ -5,11 +5,11 @@ const router = Router();
 const axios = require('axios').default;
 const { Videogame, Genre } = require('../db');
 
-//detalle del juego por el ID
+// consulto el detalle del juego por el ID
 router.get('/:idVideogame', async (req, res) => {
     const { idVideogame } = req.params
     
-    // busco si es un juego creado en la bd
+    //Busco si es un juego creado en la bd
     if (idVideogame.includes('-')) {
         let videogameDb = await Videogame.findOne({
             where: {
@@ -17,10 +17,11 @@ router.get('/:idVideogame', async (req, res) => {
             },
             include: Genre
         })
-        
+        //Parseo el objeto
         videogameDb = JSON.stringify(videogameDb);
         videogameDb = JSON.parse(videogameDb);
         
+        //dejo un array con los nombres de genero solamente
         videogameDb.genres = videogameDb.genres.map(el => el.name);
         res.json(videogameDb)
     } else {
@@ -29,71 +30,82 @@ router.get('/:idVideogame', async (req, res) => {
             const response = await axios(`https://api.rawg.io/api/games/${idVideogame}?key=${YOUR_API_KEY}`);
             let { 
                 id, 
-                name,  
-                description,
-                image, 
-                genre,
-                platforms, 
+                name, 
+                background_image, 
+                genres, 
+                description, 
                 released: releaseDate, 
-                rating, 
-
+                rating, platforms 
             } = response.data;
-            genres = genres.map(el => el.name); // mapeo solo el nombre del genero
-            platforms = platforms.map(el => el.platform.name); // mapeo solo el nombre de la plataforma
+            genres = genres.map(el => el.name); // de la API me trae un array de objetos, mapeo solo el nombre del genero
+            platforms = platforms.map(el => el.platform.name); // de la API me trae un array de objetos, mapeo solo el nombre de la plataforma
             return res.json({
-                id, 
-                name,  
+                id,
+                name,
+                background_image,
+                genres,
                 description,
-                image, 
-                genre,
-                platforms, 
-                releaseDate, 
-                rating, 
+                releaseDate,
+                rating,
+                platforms
             })
-        } catch (error) {
-            return console.log(error)
+        } catch (err) {
+            return console.log(err)
         }
     }
 })
-
+//POST
 router.post('/', async (req, res, next) => {
-    let {  
-        name,  
-        description,
-        image, 
-        genre,
-        platforms, 
+    let { 
+        name, 
+        description, 
+        background_image,
         releaseDate, 
         rating, 
-        createdInDb
-
+        genres,
+        createdInDb, 
+        platforms 
     } = req.body;
     platforms = platforms.join(', ')
     try {
         const gameCreated = await Videogame.create({
-            name,  
-            description,
-            image, 
-            platforms, 
-            releaseDate, 
-            rating, 
-            createdInDb,
+            
+                name,
+                description,
+                background_image,
+                releaseDate,
+                rating,
+                platforms,
+                createdInDb,
             
         })
         const gameGenre = await Genre.findAll({
             where: {
-                name: genre
+                name: genres
             }
         })
         
         console.log(gameCreated)
 
         await gameCreated.addGenre(gameGenre)
-
-    } catch (error) {
-        console.log(error);
+       
+    } catch (err) {
+        console.log(err);
     }
     res.send('Created succesfully')
 })
 
+//POST DE PRUEBA PARA EL BACK: 
+/*
+    {
+        "name": "fede", 
+        "description": "juego de fede", 
+        "releaseDate":"1992-04-23", 
+        "rating": 9.9, 
+        "genres": ["Adventure", "Action"], 
+        "platforms": ["Xbox One", "PlayStation 3"]
+    }
+*/
+
+ // await gameCreated[0].setGenres(genres); // relaciono ID genres al juego creado
 module.exports = router;

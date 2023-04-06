@@ -7,19 +7,21 @@ const { Platform } = require('../db');
 
 router.get('/', async (req, res) => {
     try {
+        // si ya los tengo cargados en la DB los consumo desde alli.
         const platformDb = await Platform.findAll();
         if (platformDb.length) return res.json(platformDb)
-
-        const response = await axios(`https://api.rawg.io/api/platforms?key=${YOUR_API_KEY}`);
-        const platforms = response.data.results; 
+        //else --> los voy a buscar a la API
+        const response = await axios.get(`https://api.rawg.io/api/platforms?key=${YOUR_API_KEY}`);
+        const platforms = response.data.results; // recibo un array de objetos, con los juego filtrados por GENERO
+        //los guardo en la DB filtrando solo el nombre
         platforms.forEach(async p => {
             await Platform.findOrCreate({
                 where: {
-                name: platforms.name
+                    name: p.name
                 }
             })
         })
-        
+        //SOLO ENVIO AL FRONT LA INFO NECESARIA (nombre de los generos)
         const platformsREADY = platforms.map(game => {
             return{
                 id: game.id,
@@ -27,8 +29,8 @@ router.get('/', async (req, res) => {
             }
         });
         res.json(platformsREADY)
-    } catch (error) {
-        return console.log(error)
+    } catch (err) {
+        return console.log(err)
     }
 })
 

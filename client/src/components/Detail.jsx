@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getDetails } from "../actions";
 import { useEffect } from "react";
@@ -7,10 +7,12 @@ import { useEffect } from "react";
 export default function Detail(props) {
 
     const dispatch = useDispatch()
+    const {id} = useParams();
+
 
     useEffect(() => {
-        dispatch(getDetails(props.match.params.id))
-    }, [dispatch])
+        dispatch(getDetails(id))
+    }, [dispatch,id])
     
     const myVideogame = useSelector((state) => state.details)
     

@@ -2,36 +2,36 @@ require('dotenv').config();
 const { YOUR_API_KEY } = process.env;
 const { Router } = require('express');
 const router = Router();
-const axios = require('axios')
-const { Genre } = require('../db');  
-
+const axios = require('axios').default;
+const { Genre } = require('../db');
 
 router.get('/', async (req, res) => {
     try {
+        // si ya los tengo cargados en la DB los consumo desde alli.
         const genresDb = await Genre.findAll();
-        if (genresDb.length) 
-        return res.json(genresDb)
+        if (genresDb.length) return res.json(genresDb)
         
-        const response  = await axios(`https://api.rawg.io/api/genres?key=${YOUR_API_KEY}`)
-        const genres = response.data.results;
+        //else --> los voy a buscar a la API
+        const response = await axios.get(`https://api.rawg.io/api/genres?key=${YOUR_API_KEY}`);
+        const genres = response.data.results; // recibo un array de objetos, con los juego filtrados por GENERO
+        //los guardo en la DB filtrando solo el nombre
         genres.forEach(async g => {
             await Genre.findOrCreate({
-            where: {
-                name: g.name
-            }
+                where: {
+                    name: g.name
+                }
+            })
         })
-    })                                           
-
-    const genresReady = genres.map(game=> {
-        return{
-            id: game.id,
-            name: game.mane
-        }
-    })
-    res.json(gREADY)
-
-    } catch (error) {
-        return console.log(error)
+        //SOLO ENVIO AL FRONT LA INFO NECESARIA (nombre de los generos)
+        const genresREADY = genres.map(game => {
+            return{
+                id: game.id,
+                name: game.name
+            }
+        });
+        res.json(genresREADY)
+    } catch (err) {
+        return console.log(err)
     }
 })
 
